@@ -12,9 +12,9 @@ def get_user_input() -> Dict[str, Union[int, float, str]]:
     """Get match data from user input"""
     print("\n🏈 Enter Half-Time Match Details")
     print("=" * 40)
-    
+
     match_data = {}
-    
+
     # Numeric inputs
     numeric_fields = [
         ("ht_goals_home", "Home team goals at half-time", int),
@@ -26,7 +26,7 @@ def get_user_input() -> Dict[str, Union[int, float, str]]:
         ("elo_home", "Home team ELO rating", int),
         ("elo_away", "Away team ELO rating", int),
     ]
-    
+
     for field, description, data_type in numeric_fields:
         while True:
             try:
@@ -35,14 +35,14 @@ def get_user_input() -> Dict[str, Union[int, float, str]]:
                 break
             except ValueError:
                 print(f"Please enter a valid number for {description}")
-    
+
     # Categorical inputs with validation
     print("\nLeague options: Premier League, La Liga, Bundesliga, Serie A, Ligue 1, or custom")
     match_data["league"] = input("League: ").strip() or "Premier League"
-    
+
     print("Season options: 2020-21, 2021-22, 2022-23, 2023-24")
     match_data["season"] = input("Season: ").strip() or "2023-24"
-    
+
     print("Venue options: Home, Away, Neutral")
     while True:
         venue = input("Venue: ").strip() or "Home"
@@ -50,7 +50,7 @@ def get_user_input() -> Dict[str, Union[int, float, str]]:
             match_data["venue"] = venue
             break
         print("Please enter 'Home', 'Away', or 'Neutral'")
-    
+
     return match_data
 
 def display_prediction(match_data: Dict, prediction: Dict, predictor: FootballMatchPredictor):
@@ -58,7 +58,7 @@ def display_prediction(match_data: Dict, prediction: Dict, predictor: FootballMa
     print("\n" + "="*50)
     print("🔮 FULL-TIME PREDICTION RESULTS")
     print("="*50)
-    
+
     # Current situation
     print(f"\n📊 Half-Time Situation:")
     print(f"  Score: {match_data['ht_goals_home']}-{match_data['ht_goals_away']}")
@@ -66,17 +66,17 @@ def display_prediction(match_data: Dict, prediction: Dict, predictor: FootballMa
     print(f"  Red Cards: {match_data['ht_reds_home']}-{match_data['ht_reds_away']}")
     print(f"  ELO Ratings: {match_data['elo_home']} vs {match_data['elo_away']}")
     print(f"  Match: {match_data['league']}, {match_data['season']}, {match_data['venue']} venue")
-    
+
     # Predictions
     print(f"\n🎯 Full-Time Predictions:")
     home_goals = prediction['ft_goals_home']
     away_goals = prediction['ft_goals_away']
     home_sot = prediction['ft_sot_home']
     away_sot = prediction['ft_sot_away']
-    
+
     print(f"  Final Score: {home_goals:.1f} - {away_goals:.1f}")
     print(f"  Total Shots on Target: {home_sot:.1f} - {away_sot:.1f}")
-    
+
     # Additional analysis
     print(f"\n📈 Analysis:")
     goals_diff = home_goals - away_goals
@@ -86,7 +86,7 @@ def display_prediction(match_data: Dict, prediction: Dict, predictor: FootballMa
         print(f"  • Away team likely to win by {abs(goals_diff):.1f} goals")
     else:
         print(f"  • Very close match expected")
-    
+
     total_goals = home_goals + away_goals
     if total_goals > 3.5:
         print(f"  • High-scoring game expected ({total_goals:.1f} total goals)")
@@ -94,7 +94,7 @@ def display_prediction(match_data: Dict, prediction: Dict, predictor: FootballMa
         print(f"  • Low-scoring game expected ({total_goals:.1f} total goals)")
     else:
         print(f"  • Moderate scoring expected ({total_goals:.1f} total goals)")
-    
+
     # Second half predictions
     h2_home_goals = max(0, home_goals - match_data['ht_goals_home'])
     h2_away_goals = max(0, away_goals - match_data['ht_goals_away'])
@@ -104,7 +104,7 @@ def quick_examples():
     """Show some quick example predictions"""
     print("\n🚀 Quick Example Predictions")
     print("="*40)
-    
+
     examples = [
         {
             "name": "Manchester City vs Arsenal (close at HT)",
@@ -127,7 +127,7 @@ def quick_examples():
             }
         }
     ]
-    
+
     try:
         predictor = FootballMatchPredictor()
         for example in examples:
@@ -142,7 +142,7 @@ def main():
     """Main interactive loop"""
     print("🏈 Interactive Football Match Predictor")
     print("=" * 50)
-    
+
     # Try to load the model
     try:
         predictor = FootballMatchPredictor()
@@ -152,7 +152,7 @@ def main():
         print("1. Trained the model (run main.py)")
         print("2. The files torch_ht2ft.pt and preprocessor.pkl exist")
         return
-    
+
     while True:
         print("\n" + "="*50)
         print("Choose an option:")
@@ -160,46 +160,46 @@ def main():
         print("2. See quick examples")
         print("3. Exit")
         print("="*50)
-        
+
         choice = input("Your choice (1-3): ").strip()
-        
+
         if choice == "1":
             try:
                 # Get user input
                 match_data = get_user_input()
-                
+
                 # Make prediction
                 print("\n⏳ Making prediction...")
                 prediction = predictor.predict_single_match(match_data)
-                
+
                 # Display results
                 display_prediction(match_data, prediction, predictor)
-                
+
                 # Ask for confidence intervals
                 conf_choice = input("\nShow prediction uncertainty? (y/n): ").lower()
                 if conf_choice in ['y', 'yes']:
                     print("⏳ Calculating uncertainty (this may take a moment)...")
                     confidence = predictor.predict_with_confidence(match_data, n_samples=30)
-                    
+
                     print("\n📊 Prediction Ranges (95% confidence):")
                     for target, stats in confidence.items():
                         if 'goals' in target:
                             team = "Home" if 'home' in target else "Away"
                             print(f"  {team} goals: {stats['ci_lower']:.1f} - {stats['ci_upper']:.1f} "
                                   f"(most likely: {stats['mean']:.1f})")
-                
+
             except KeyboardInterrupt:
                 print("\n\nOperation cancelled.")
             except Exception as e:
                 print(f"\n❌ Error making prediction: {e}")
-        
+
         elif choice == "2":
             quick_examples()
-        
+
         elif choice == "3":
             print("\n👋 Thanks for using the Football Match Predictor!")
             break
-        
+
         else:
             print("Invalid choice. Please select 1, 2, or 3.")
 

@@ -37,7 +37,7 @@ class ImprovedMLP(nn.Module):
 class FootballMatchPredictor:
     """Predictor for individual football matches"""
     
-    def __init__(self, model_path: str = "torch_ht2ft.pt", preprocessor_path: str = "preprocessor.pkl"):
+    def __init__(self, model_path: str = "example/torch_ht2ft.pt", preprocessor_path: str = "example/preprocessor.pkl"):
         self.model_path = model_path
         self.preprocessor_path = preprocessor_path
         self.model = None
